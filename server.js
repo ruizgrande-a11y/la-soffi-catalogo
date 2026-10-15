@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const zlib = require('zlib');
 const { URL } = require('url');
 
 const ROOT = __dirname;
@@ -16,6 +17,46 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'lasoffi2026';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'la-soffi-cambia-este-secreto-en-produccion';
 
+function extractTarGz(archivePath, destinationRoot) {
+  const tar = zlib.gunzipSync(fs.readFileSync(archivePath));
+  let offset = 0;
+
+  while (offset + 512 <= tar.length) {
+    const header = tar.subarray(offset, offset + 512);
+    if (header.every(byte => byte === 0)) break;
+
+    const name = header.subarray(0, 100).toString('utf8').replace(/\0.*$/, '');
+    const sizeRaw = header.subarray(124, 136).toString('utf8').replace(/\0.*$/, '').trim();
+    const size = parseInt(sizeRaw || '0', 8) || 0;
+    const type = String.fromCharCode(header[156] || 48);
+    offset += 512;
+
+    if (name && (type === '0' || type === '\0')) {
+      const destination = path.normalize(path.join(destinationRoot, name));
+      if (!destination.startsWith(destinationRoot)) {
+        throw new Error('Ruta inválida dentro del archivo de imágenes');
+      }
+      fs.mkdirSync(path.dirname(destination), { recursive: true });
+      fs.writeFileSync(destination, tar.subarray(offset, offset + size));
+    }
+
+    offset += Math.ceil(size / 512) * 512;
+  }
+}
+
+function ensureProductImages() {
+  const marker = path.join(PUBLIC_DIR, 'assets', 'products', 'p4-tl.jpg');
+  const archive = path.join(ROOT, 'product-images.tar.gz');
+  const destinationRoot = path.join(PUBLIC_DIR, 'assets');
+
+  if (fs.existsSync(marker) || !fs.existsSync(archive)) return;
+
+  fs.mkdirSync(destinationRoot, { recursive: true });
+  extractTarGz(archive, destinationRoot);
+  console.log('Imágenes iniciales de productos de La Soffi preparadas.');
+}
+
+ensureProductImages();
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
