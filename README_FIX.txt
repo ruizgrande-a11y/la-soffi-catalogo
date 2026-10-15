@@ -1,1 +1,0 @@
-Corrección de recursos binarios en progreso.
