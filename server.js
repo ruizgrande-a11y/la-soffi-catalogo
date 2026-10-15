@@ -17,10 +17,11 @@ const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'lasoffi2026';
 const SESSION_SECRET = process.env.SESSION_SECRET || 'la-soffi-cambia-este-secreto-en-produccion';
 
-function ensureBundledAssets() {
-  const marker = path.join(PUBLIC_DIR, 'assets', 'la-soffi-logo.png');
-  const archive = path.join(ROOT, 'assets.tar.gz');
+function ensureBundledPublic() {
+  const marker = path.join(PUBLIC_DIR, 'index.html');
+  const archive = path.join(ROOT, 'site.tar.gz');
   if (fs.existsSync(marker) || !fs.existsSync(archive)) return;
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
   const tar = zlib.gunzipSync(fs.readFileSync(archive));
   let offset = 0;
   while (offset + 512 <= tar.length) {
@@ -33,16 +34,16 @@ function ensureBundledAssets() {
     offset += 512;
     if (name && (type === '0' || type === '\0')) {
       const destination = path.normalize(path.join(PUBLIC_DIR, name));
-      if (!destination.startsWith(PUBLIC_DIR)) throw new Error('Ruta inválida en assets.tar.gz');
+      if (!destination.startsWith(PUBLIC_DIR)) throw new Error('Ruta inválida en site.tar.gz');
       fs.mkdirSync(path.dirname(destination), { recursive: true });
       fs.writeFileSync(destination, tar.subarray(offset, offset + size));
     }
     offset += Math.ceil(size / 512) * 512;
   }
-  console.log('Assets iniciales de La Soffi preparados.');
+  console.log('Archivos públicos iniciales de La Soffi preparados.');
 }
 
-ensureBundledAssets();
+ensureBundledPublic();
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
