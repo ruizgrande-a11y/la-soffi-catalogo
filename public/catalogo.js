@@ -1,8 +1,8 @@
 let products=[],settings={},activeCategory='Todos',query='',currentProduct=null;
 const cart=new Map();
 const categoryImages={
-'Todos':'/assets/categories/tortas.svg','Tortas':'/assets/categories/tortas.svg','Minitortas':'/assets/categories/tortas.svg','Postres':'/assets/categories/postres.svg','Postres Personales':'/assets/categories/postres.svg','Pasteles':'/assets/categories/postres.svg','Empanadas':'/assets/categories/empanadas.svg','Bocaditos':'/assets/categories/bocaditos.svg','Kekes':'/assets/categories/kekes.svg','Helados Artesanales':'/assets/categories/helados.svg'};
-const fallbackFor=c=>categoryImages[c]||'/assets/categories/tortas.svg';
+'Todos':'/assets/categories/tortas.jpg','Tortas':'/assets/categories/tortas.jpg','Minitortas':'/assets/categories/tortas.jpg','Postres':'/assets/categories/yogurt.jpg','Postres Personales':'/assets/categories/yogurt.jpg','Pasteles':'/assets/categories/yogurt.jpg','Empanadas':'/assets/categories/empanadas.jpg','Bocaditos':'/assets/categories/bocaditos.jpg','Kekes':'/assets/categories/kekes.jpg','Helados Artesanales':'/assets/categories/helados.jpg'};
+const fallbackFor=c=>categoryImages[c]||'/assets/categories/tortas.jpg';
 const money=n=>`S/${Number(n||0).toFixed(2)}`;
 const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[m]));
 function wireImageFallbacks(root=document){root.querySelectorAll('img[data-fallback]').forEach(img=>{img.onerror=()=>{if(img.src.endsWith(img.dataset.fallback))return;img.src=img.dataset.fallback}})}
