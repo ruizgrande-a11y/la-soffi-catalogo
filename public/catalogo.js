@@ -1,10 +1,10 @@
 let products=[],settings={},activeCategory='Todos',query='',currentProduct=null;
 const cart=new Map();
 const categoryImages={
-'Todos':'/assets/categories/tortas.jpg','Tortas':'/assets/categories/tortas.jpg','Minitortas':'/assets/categories/tortas.jpg','Postres':'/assets/categories/yogurt.jpg','Postres Personales':'/assets/categories/yogurt.jpg','Pasteles':'/assets/categories/yogurt.jpg','Empanadas':'/assets/categories/empanadas.jpg','Bocaditos':'/assets/categories/bocaditos.jpg','Kekes':'/assets/categories/kekes.jpg','Helados Artesanales':'/assets/categories/helados.jpg'};
-const fallbackFor=c=>categoryImages[c]||'/assets/categories/tortas.jpg';
+'Todos':'/assets/categories/todas_categoria.webp','Tortas':'/assets/categories/tortas_categoria.webp','Minitortas':'/assets/categories/minitortas_categoria.webp','Postres':'/assets/categories/postres_categoria.webp','Postres Personales':'/assets/categories/postres-personales_categoria.webp','Pasteles':'/assets/categories/pasteles_categoria.webp','Empanadas':'/assets/categories/empanadas_categoria.webp','Bocaditos':'/assets/categories/bocaditos_categoria.webp','Kekes':'/assets/categories/kekes_categoria.webp','Helados Artesanales':'/assets/categories/helados_categoria.webp'};
+const fallbackFor=c=>categoryImages[c]||'/assets/categories/todas_categoria.webp';
 const money=n=>`S/${Number(n||0).toFixed(2)}`;
-const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','"':'&quot;'}[m]));
+const esc=s=>String(s??'').replace(/[&<>'\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#039;','\"':'&quot;'}[m]));
 function wireImageFallbacks(root=document){root.querySelectorAll('img[data-fallback]').forEach(img=>{img.onerror=()=>{if(img.src.endsWith(img.dataset.fallback))return;img.src=img.dataset.fallback}})}
 async function init(){[products,settings]=await Promise.all([fetch('/api/products').then(r=>r.json()),fetch('/api/settings').then(r=>r.json())]);renderStories();render();bind();}
 function bind(){document.getElementById('search').addEventListener('input',e=>{query=e.target.value.toLowerCase().trim();render()});document.getElementById('modalClose').onclick=closeModal;document.getElementById('overlay').onclick=()=>{closeModal();closeCart()};document.getElementById('cartBtn').onclick=openCart;document.getElementById('drawerClose').onclick=closeCart;document.getElementById('modalAdd').onclick=()=>{if(currentProduct)addToCart(currentProduct.id);closeModal()};document.getElementById('sendWhatsApp').onclick=sendWhatsApp}
