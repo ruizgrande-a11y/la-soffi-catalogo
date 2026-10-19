@@ -217,6 +217,35 @@ async function handleApi(req, res, url) {
     }
   }
 
+function priceDisplay(option) {
+  const amount=Number(option.price);
+  const moneyText='S/'+(Number.isInteger(amount)?amount.toFixed(0):amount.toFixed(2));
+  return moneyText+(option.label?' ('+option.label+')':'');
+}
+
+function pricingFromInput(body, existing=null) {
+  let rows;
+  if(Array.isArray(body.priceOptions)) rows=body.priceOptions;
+  else if(Array.isArray(existing?.priceOptions)&&body.priceLabel===undefined) rows=existing.priceOptions;
+  else {
+    const text=String(body.priceLabel??existing?.priceLabel??'');
+    const matches=[...text.matchAll(/S\/\s*(\d+(?:[.,]\d{1,2})?)/gi)];
+    rows=matches.map(m=>({price:Number(m[1].replace(',','.')),label:''}));
+    if(!rows.length) rows=[{price:Number(body.price??existing?.price??0),label:''}];
+  }
+  if(!Array.isArray(rows)||rows.length<1||rows.length>30) throw new Error('Agrega entre 1 y 30 precios');
+  const seen=new Set();
+  const options=rows.map(row=>{
+    const price=Math.round(Number(row.price)*100)/100;
+    const label=String(row.label||'').trim().slice(0,80);
+    if(!Number.isFinite(price)||price<=0||price>1000000) throw new Error('El precio debe ser mayor que cero');
+    if(seen.has(price)) throw new Error('No repitas el mismo precio');
+    seen.add(price);
+    return {price,label};
+  });
+  return {priceOptions:options,price:options[0].price,priceLabel:options.map(priceDisplay).join(' · ')};
+}
+
   if (req.method === 'POST' && url.pathname === '/api/products') {
     if (!isAuthed(req)) return json(res, 401, { error: 'No autorizado' });
     try {
@@ -236,8 +265,7 @@ async function handleApi(req, res, url) {
         id,
         name: String(body.name).trim(),
         category: String(body.category).trim(),
-        price: Number(body.price || 0),
-        priceLabel: String(body.priceLabel || '').trim(),
+        ...pricingFromInput(body),
         description: String(body.description || '').trim(),
         image: String(body.image || '/assets/categories/tortas.jpg'),
         featured: Boolean(body.featured),
@@ -266,8 +294,8 @@ async function handleApi(req, res, url) {
       products[index] = {
         ...products[index],
         ...body,
+        ...pricingFromInput(body, products[index]),
         id,
-        price: Number(body.price ?? products[index].price),
         featured: Boolean(body.featured ?? products[index].featured),
         active: body.active !== false
       };
