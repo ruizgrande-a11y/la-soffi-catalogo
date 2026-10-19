@@ -5,15 +5,23 @@ const categoryImages={
 'Todos':'/assets/categories/todas_categoria.webp','Tortas':'/assets/categories/tortas_categoria.webp','Minitortas':'/assets/categories/minitortas_categoria.webp','Postres':'/assets/categories/postres_categoria.webp','Postres Personales':'/assets/categories/postres-personales_categoria.webp','Pasteles':'/assets/categories/pasteles_categoria.webp','Empanadas':'/assets/categories/empanadas_categoria.webp','Bocaditos':'/assets/categories/bocaditos_categoria.webp','Kekes':'/assets/categories/kekes_categoria.webp','Helados Artesanales':'/assets/categories/helados_categoria.webp'};
 const fallbackFor=c=>categoryImages[c]||'/assets/categories/todas_categoria.webp';
 function priceOptions(product) {
+  if(Array.isArray(product.priceOptions)&&product.priceOptions.length){
+    const options=product.priceOptions.map(o=>{
+      const price=Number(o.price);
+      const name=String(o.label||'').trim();
+      return {price,label:`S/${price % 1===0?price.toFixed(0):price.toFixed(2)}${name?' ('+name+')':''}`};
+    }).filter(o=>Number.isFinite(o.price)&&o.price>0);
+    if(options.length)return options;
+  }
   const matches=[...String(product.priceLabel||'').matchAll(/S\/\s*(\d+(?:[.,]\d{1,2})?)/gi)];
   const options=[];
-  for(const match of matches) {
+  for(const match of matches){
     const price=Number(match[1].replace(',','.'));
-    if(Number.isFinite(price)&&price>=0&&!options.some(item=>item.price===price)) {
-      options.push({price,label:`S/${match[1].replace(',','.')}`});
+    if(Number.isFinite(price)&&price>0&&!options.some(o=>o.price===price)){
+      options.push({price,label:`S/${price % 1===0?price.toFixed(0):price.toFixed(2)}`});
     }
   }
-  if(options.length===0) {
+  if(!options.length){
     const price=Number(product.price||0);
     options.push({price:Number.isFinite(price)?price:0,label:money(price)});
   }
@@ -50,7 +58,7 @@ function openModal(id) {
   const multiple=choices.length>1;
   selectedPrice=multiple?null:choices[0].price;
   const modalPrice=document.getElementById('modalPrice');
-  modalPrice.textContent=currentProduct.priceLabel||money(currentProduct.price);
+  modalPrice.textContent=currentProduct.priceLabel||choices.map(o=>o.label).join(' · ');
   const selector=document.getElementById('modalOptions');
   selector.hidden=!multiple;
   const buttons=document.getElementById('priceChoices');
